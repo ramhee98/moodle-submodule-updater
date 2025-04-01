@@ -6,27 +6,28 @@ import re
 # Input and output filenames
 INPUT_FILE = "submodules.sh"
 OUTPUT_FILE = "submodules_updated.sh"
-TARGET_BRANCH = "MOODLE_500_STABLE"
+TARGET_BRANCH_KEYWORD = "500"
 
-def check_remote_branch_exists(repo_url, branch):
+def find_matching_branch(repo_url, keyword):
     """
-    Clone the repository as a bare clone and check if the target branch exists.
+    Use git ls-remote to find remote branches containing the keyword.
     """
-    tmp_dir = tempfile.mkdtemp()
     try:
-        subprocess.run(
-            ["git", "clone", "--bare", "--quiet", repo_url, tmp_dir],
-            check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
         result = subprocess.run(
-            ["git", "--git-dir", tmp_dir, "show-ref", "--verify", f"refs/heads/{branch}"],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            ["git", "ls-remote", "--heads", repo_url],
+            capture_output=True, text=True, check=True
         )
-        return result.returncode == 0
-    except subprocess.CalledProcessError:
-        return False
-    finally:
-        shutil.rmtree(tmp_dir)
+        lines = result.stdout.strip().splitlines()
+        for line in lines:
+            parts = line.split()
+            if len(parts) == 2 and parts[1].startswith("refs/heads/"):
+                branch = parts[1].replace("refs/heads/", "")
+                if keyword in branch:
+                    return branch
+        return None
+    except subprocess.CalledProcessError as e:
+        print(f"⚠️ Git error: {e}")
+        return None
 
 def ask_user(prompt):
     """
@@ -53,21 +54,22 @@ def process_submodules(input_file, output_file):
                 if match:
                     old_branch, url, path = match.groups()
                     print(f"\n🔍 Checking {path} ({url})...")
-                    if check_remote_branch_exists(url, TARGET_BRANCH):
-                        print(f"✅ Branch '{TARGET_BRANCH}' exists.")
-                        if old_branch != TARGET_BRANCH:
-                            if ask_user(f"👉 Do you want to replace '{old_branch}' with '{TARGET_BRANCH}'?"):
-                                new_line = line.replace(old_branch, TARGET_BRANCH)
+                    target_branch = find_matching_branch(url, TARGET_BRANCH_KEYWORD)
+                    if target_branch:
+                        print(f"✅ Branch '{target_branch}' exists.")
+                        if old_branch != target_branch:
+                            if ask_user(f"👉 Do you want to replace '{old_branch}' with '{target_branch}'?"):
+                                new_line = line.replace(old_branch, target_branch)
                                 outfile.write(new_line)
                                 print("✅ Updated.")
                             else:
                                 outfile.write(line)
                                 print("⏭️  Skipped.")
                         else:
-                            print(f"ℹ️ Already on target branch '{TARGET_BRANCH}' – no change needed.")
+                            print(f"ℹ️ Already on target branch '{target_branch}' – no change needed.")
                             outfile.write(line)
                     else:
-                        print(f"❌ Branch '{TARGET_BRANCH}' not found – entry left unchanged.")
+                        print(f"❌ Branch '{TARGET_BRANCH_KEYWORD}' not found – entry left unchanged.")
                         outfile.write(line)
                 else:
                     print(f"⚠️ No valid submodule pattern found in line: {line.strip()}")
