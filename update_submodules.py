@@ -36,6 +36,14 @@ def find_matching_branch(repo_url, keyword):
         print(f"⚠️ Git error: {e}")
         return None
 
+def extract_moodle_version(branch_name):
+    """
+    Extract the numeric Moodle version (e.g. 500 from MOODLE_500_STABLE).
+    Returns int or None.
+    """
+    match = re.search(r'(\d{3})', branch_name)
+    return int(match.group(1)) if match else None
+
 def ask_user(prompt):
     """
     Ask the user for confirmation. Returns True if yes, False if no.
@@ -64,6 +72,15 @@ def process_submodules(input_file, output_file):
                     target_branch = find_matching_branch(url, TARGET_BRANCH_KEYWORD)
                     if target_branch:
                         print(f"✅ Branch '{target_branch}' exists.")
+
+                        old_version = extract_moodle_version(old_branch)
+                        new_version = extract_moodle_version(target_branch)
+
+                        if old_version and new_version and new_version < old_version:
+                            print(f"⚠️  Skipping downgrade: {old_branch} → {target_branch}")
+                            outfile.write(line)
+                            continue
+
                         if old_branch != target_branch:
                             if AUTO_CONFIRM or ask_user(f"👉 Do you want to replace '{old_branch}' with '{target_branch}'?"):
                                 new_line = line.replace(old_branch, target_branch)
