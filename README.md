@@ -43,22 +43,39 @@ python3 update_submodules.py
 
 ---
 
+## ⚙️ Configuration
+
+The script reads settings from a `config.ini` file in the root folder. Example:
+
+```ini
+[settings]
+INPUT_FILE = submodules.sh
+OUTPUT_FILE = submodules_updated.sh
+TARGET_BRANCH_KEYWORD = 500
+```
+- INPUT_FILE: Path to the shell script containing Moodle plugin submodules.
+- OUTPUT_FILE: Path to the output file where updated entries will be written.
+- TARGET_BRANCH_KEYWORD: The keyword used to detect target branches (e.g. 500 for MOODLE_500_STABLE, MOODLE500...).
+
+---
+
 ## 📝 Usage
 
 1. Prepare your `submodules.sh` file with Moodle plugin submodules.
-2. Run the script:
+2. Adjust the `config.ini` file if needed.
+3. Run the script:
 
    ```bash
    python3 update_submodules.py
    ```
 
-3. For each plugin that has a `*500*` branch, you’ll be asked to replace the old branch with the new one:
+4. For each plugin that has a `*500*` branch, you’ll be asked to replace the old branch with the new one:
 
    ```
    👉 Do you want to replace 'MOODLE_404_STABLE' with 'MOODLE_500_STABLE'? [y/n]:
    ```
 
-4. A new file called `submodules_updated.sh` will be created with the updated lines.
+5. A (new) file called `submodules_updated.sh` will be created with the updated lines.
 
 ---
 
