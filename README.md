@@ -1,13 +1,13 @@
 # moodle-submodule-updater
 
-🔄 A CLI tool to check and update Git submodules of Moodle plugins to the `MOODLE_500_STABLE` branch, with interactive confirmation for each change.
+🔄 A CLI tool to check and update Git submodules of Moodle plugins to the `*500*` branch, with interactive confirmation for each change.
 
 ---
 
 ## 🚀 Features
 
 - Parses a `.sh` file that adds Moodle plugin submodules (e.g. `git submodule add -b MOODLE_404_STABLE ...`)
-- Checks if a `MOODLE_500_STABLE` branch exists in each plugin repository
+- Checks if a `500` branch exists in each plugin repository
 - Asks interactively before updating the submodule definition
 - Writes the results to a new updated `.sh` file
 - No changes are made without your confirmation
@@ -52,7 +52,7 @@ python3 update_submodules.py
    python3 update_submodules.py
    ```
 
-3. For each plugin that has a `MOODLE_500_STABLE` branch, you’ll be asked to replace the old branch with the new one:
+3. For each plugin that has a `*500*` branch, you’ll be asked to replace the old branch with the new one:
 
    ```
    👉 Do you want to replace 'MOODLE_404_STABLE' with 'MOODLE_500_STABLE'? [y/n]:
