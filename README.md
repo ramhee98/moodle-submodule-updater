@@ -52,10 +52,13 @@ The script reads settings from a `config.ini` file in the root folder. Example:
 INPUT_FILE = submodules.sh
 OUTPUT_FILE = submodules_updated.sh
 TARGET_BRANCH_KEYWORD = 500
+AUTO_CONFIRM = False
+
 ```
 - INPUT_FILE: Path to the shell script containing Moodle plugin submodules.
 - OUTPUT_FILE: Path to the output file where updated entries will be written.
 - TARGET_BRANCH_KEYWORD: The keyword used to detect target branches (e.g. 500 for MOODLE_500_STABLE, MOODLE500...).
+- AUTO_CONFIRM: If set to `true`, all valid updates will be applied without prompting.
 
 ---
 
