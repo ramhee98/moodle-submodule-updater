@@ -13,6 +13,7 @@ cfg = load_config()
 INPUT_FILE = cfg["INPUT_FILE"]
 OUTPUT_FILE = cfg["OUTPUT_FILE"]
 TARGET_BRANCH_KEYWORD = cfg["TARGET_BRANCH_KEYWORD"]
+AUTO_CONFIRM = cfg.getboolean("AUTO_CONFIRM", fallback=False)
 
 def find_matching_branch(repo_url, keyword):
     """
@@ -64,7 +65,7 @@ def process_submodules(input_file, output_file):
                     if target_branch:
                         print(f"✅ Branch '{target_branch}' exists.")
                         if old_branch != target_branch:
-                            if ask_user(f"👉 Do you want to replace '{old_branch}' with '{target_branch}'?"):
+                            if AUTO_CONFIRM or ask_user(f"👉 Do you want to replace '{old_branch}' with '{target_branch}'?"):
                                 new_line = line.replace(old_branch, target_branch)
                                 outfile.write(new_line)
                                 print("✅ Updated.")
