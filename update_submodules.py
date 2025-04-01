@@ -55,13 +55,17 @@ def process_submodules(input_file, output_file):
                     print(f"\n🔍 Checking {path} ({url})...")
                     if check_remote_branch_exists(url, TARGET_BRANCH):
                         print(f"✅ Branch '{TARGET_BRANCH}' exists.")
-                        if ask_user(f"👉 Do you want to replace '{old_branch}' with '{TARGET_BRANCH}'?"):
-                            new_line = line.replace(old_branch, TARGET_BRANCH)
-                            outfile.write(new_line)
-                            print("✅ Updated.")
+                        if old_branch != TARGET_BRANCH:
+                            if ask_user(f"👉 Do you want to replace '{old_branch}' with '{TARGET_BRANCH}'?"):
+                                new_line = line.replace(old_branch, TARGET_BRANCH)
+                                outfile.write(new_line)
+                                print("✅ Updated.")
+                            else:
+                                outfile.write(line)
+                                print("⏭️  Skipped.")
                         else:
+                            print(f"ℹ️ Already on target branch '{TARGET_BRANCH}' – no change needed.")
                             outfile.write(line)
-                            print("⏭️  Skipped.")
                     else:
                         print(f"❌ Branch '{TARGET_BRANCH}' not found – entry left unchanged.")
                         outfile.write(line)
