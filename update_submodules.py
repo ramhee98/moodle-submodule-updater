@@ -2,11 +2,17 @@ import subprocess
 import tempfile
 import shutil
 import re
+import configparser
 
-# Input and output filenames
-INPUT_FILE = "submodules.sh"
-OUTPUT_FILE = "submodules_updated.sh"
-TARGET_BRANCH_KEYWORD = "500"
+def load_config(path="config.ini"):
+    config = configparser.ConfigParser()
+    config.read(path)
+    return config["settings"]
+
+cfg = load_config()
+INPUT_FILE = cfg["INPUT_FILE"]
+OUTPUT_FILE = cfg["OUTPUT_FILE"]
+TARGET_BRANCH_KEYWORD = cfg["TARGET_BRANCH_KEYWORD"]
 
 def find_matching_branch(repo_url, keyword):
     """
