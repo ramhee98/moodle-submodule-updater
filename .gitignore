@@ -1,0 +1,11 @@
+*.sh
+
+# Ignore other common Python-related files and folders
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+.env
+.DS_Store
+*.log
