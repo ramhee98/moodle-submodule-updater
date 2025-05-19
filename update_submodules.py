@@ -1,6 +1,4 @@
 import subprocess
-import tempfile
-import shutil
 import re
 import configparser
 
