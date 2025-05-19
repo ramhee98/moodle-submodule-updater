@@ -1,6 +1,7 @@
 import subprocess
 import re
 import configparser
+import os
 
 def load_config(path="config.ini"):
     config = configparser.ConfigParser()
@@ -57,9 +58,10 @@ def process_submodules(input_file, output_file):
     Read each line in the submodules.sh file, check if the MOODLE_500_STABLE
     branch exists, and interactively update the line if desired.
     """
-    with open(input_file, 'r', encoding='utf-8') as infile, \
-         open(output_file, 'w', encoding='utf-8') as outfile:
+    use_temp = input_file == output_file
+    temp_output = output_file + ".tmp" if use_temp else output_file
 
+    with open(input_file, 'r', encoding='utf-8') as infile, open(temp_output, 'w', encoding='utf-8') as outfile:
         for line in infile:
             if line.strip().startswith("git submodule add"):
                 # Match: -b <branch> <repo-url> <path>
@@ -99,6 +101,8 @@ def process_submodules(input_file, output_file):
             else:
                 # Non-submodule lines are copied as is
                 outfile.write(line)
+    if use_temp:
+        os.replace(temp_output, output_file)
 
 if __name__ == "__main__":
     process_submodules(INPUT_FILE, OUTPUT_FILE)
