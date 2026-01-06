@@ -17,6 +17,7 @@ AUTO_CONFIRM = cfg.getboolean("AUTO_CONFIRM", fallback=False)
 def find_matching_branch(repo_url, keyword):
     """
     Use git ls-remote to find remote branches containing the keyword.
+    If multiple branches match, ask the user to choose one.
     """
     try:
         result = subprocess.run(
@@ -24,16 +25,46 @@ def find_matching_branch(repo_url, keyword):
             capture_output=True, text=True, check=True
         )
         lines = result.stdout.strip().splitlines()
+        matching_branches = []
         for line in lines:
             parts = line.split()
             if len(parts) == 2 and parts[1].startswith("refs/heads/"):
                 branch = parts[1].replace("refs/heads/", "")
                 if keyword in branch:
-                    return branch
-        return None
+                    matching_branches.append(branch)
+        
+        if not matching_branches:
+            return None
+        elif len(matching_branches) == 1:
+            return matching_branches[0]
+        else:
+            return matching_branches  # Return all for user to choose
     except subprocess.CalledProcessError as e:
         print(f"⚠️ Git error: {e}")
         return None
+
+
+def ask_branch_choice(branches, current_branch):
+    """
+    Ask the user to choose one branch from a list of matching branches.
+    Returns the selected branch or None if skipped.
+    """
+    print(f"🔀 Multiple matching branches found:")
+    for i, branch in enumerate(branches, 1):
+        print(f"  {i}. {branch}")
+    print(f"  0. Skip (keep {current_branch})")
+    
+    while True:
+        choice = input("👉 Enter your choice: ").strip()
+        if choice == "":
+            return None
+        if choice.isdigit():
+            choice_num = int(choice)
+            if choice_num == 0:
+                return None
+            elif 1 <= choice_num <= len(branches):
+                return branches[choice_num - 1]
+        print(f"Please enter a number between 0 and {len(branches)}.")
 
 def extract_moodle_version(branch_name):
     """
@@ -69,7 +100,29 @@ def process_submodules(input_file, output_file):
                 if match:
                     old_branch, url, path = match.groups()
                     print(f"\n🔍 Checking {path} ({url})...")
+                    
+                    # Skip if already on a branch containing the target keyword
+                    if TARGET_BRANCH_KEYWORD in old_branch:
+                        print(f"ℹ️ Already on target branch '{old_branch}' – no change needed.")
+                        outfile.write(line)
+                        continue
+                    
                     target_branch = find_matching_branch(url, TARGET_BRANCH_KEYWORD)
+                    
+                    # Handle multiple matching branches
+                    if isinstance(target_branch, list):
+                        # Filter out the current branch from choices
+                        other_branches = [b for b in target_branch if b != old_branch]
+                        if not other_branches:
+                            # Current branch is the only match, no change needed
+                            print(f"ℹ️ Already on target branch '{old_branch}' – no change needed.")
+                            outfile.write(line)
+                            continue
+                        elif len(other_branches) == 1:
+                            target_branch = other_branches[0]
+                        else:
+                            target_branch = ask_branch_choice(other_branches, old_branch)
+                    
                     if target_branch:
                         print(f"✅ Branch '{target_branch}' exists.")
 

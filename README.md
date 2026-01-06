@@ -7,7 +7,9 @@
 ## 🚀 Features
 
 - Parses a `.sh` file that adds Moodle plugin submodules (e.g. `git submodule add -b MOODLE_404_STABLE ...`)
-- Checks if a `500` branch exists in each plugin repository
+- Checks if a target branch exists in each plugin repository
+- **Interactive branch selection** when multiple matching branches are found
+- Skips submodules already on a branch containing the target keyword
 - Asks interactively before updating the submodule definition
 - Writes the results to a new updated `.sh` file
 - No changes are made without your confirmation
@@ -77,7 +79,17 @@ AUTO_CONFIRM = False
    ```
    👉 Do you want to replace 'MOODLE_404_STABLE' with 'MOODLE_500_STABLE'? [y/n]:
    ```
+   If multiple matching branches are found, you'll be prompted to choose:
 
+   ```
+   🔀 Multiple matching branches found:
+     1. MOODLE_500_STABLE
+     2. MOODLE_500_DEV
+     0. Skip (keep MOODLE_404_STABLE)
+   👉 Enter your choice:
+   ```
+
+   Press Enter or select `0` to skip.
 5. A (new) file called `submodules_updated.sh` will be created with the updated lines.
 
 ---
@@ -90,8 +102,21 @@ AUTO_CONFIRM = False
 👉 Do you want to replace 'MOODLE_404_STABLE' with 'MOODLE_500_STABLE'? [y/n]: y
 ✅ Updated.
 
+🔍 Checking mod/someplugin (https://github.com/example/moodle-mod_someplugin.git)...
+🔀 Multiple matching branches found:
+  1. MOODLE_500_STABLE
+  2. MOODLE_500_DEV
+  0. Skip (keep MOODLE_404_STABLE)
+👉 Enter your choice: 1
+✅ Branch 'MOODLE_500_STABLE' exists.
+👉 Do you want to replace 'MOODLE_404_STABLE' with 'MOODLE_500_STABLE'? [y/n]: y
+✅ Updated.
+
 🔍 Checking mod/checklist (https://github.com/sam/moodle-mod_checklist.git)...
-❌ Branch 'MOODLE_500_STABLE' not found – entry left unchanged.
+❌ Branch '500' not found – entry left unchanged.
+
+🔍 Checking mod/alreadyupdated (https://github.com/example/moodle-mod_alreadyupdated.git)...
+ℹ️ Already on target branch 'MOODLE_500_STABLE' – no change needed.
 ```
 
 ---
