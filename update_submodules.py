@@ -156,7 +156,68 @@ def process_submodules(input_file, output_file):
                 outfile.write(line)
     if use_temp:
         os.replace(temp_output, output_file)
+    print(f"\n🎉 Done! Updated file written to: {OUTPUT_FILE}")
+
+
+def verify_submodules(file_path):
+    """
+    Verify that all branches in the submodules file exist in their remote repositories.
+    Returns True if all branches are valid, False otherwise.
+    """
+    print(f"\n🔎 Verifying submodules in '{file_path}'...")
+    all_valid = True
+    checked = 0
+    failed = 0
+    failed_entries = []
+    
+    with open(file_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            if line.strip().startswith("git submodule add"):
+                match = re.search(r'-b\s+(\S+)\s+(\S+)\s+(\S+)', line)
+                if match:
+                    branch, url, path = match.groups()
+                    checked += 1
+                    print(f"  🔍 Verifying {path}...", end=" ", flush=True)
+                    
+                    if branch_exists(url, branch):
+                        print(f"✅ '{branch}' exists")
+                    else:
+                        print(f"❌ '{branch}' NOT FOUND")
+                        all_valid = False
+                        failed += 1
+                        failed_entries.append((path, branch, url))
+    
+    if failed > 0:
+        print("\n" + "=" * 60)
+        print("🚨🚨🚨 VERIFICATION FAILED 🚨🚨🚨")
+        print("=" * 60)
+        print(f"\n❌ {failed} branch(es) not found:\n")
+        for path, branch, url in failed_entries:
+            print(f"  ⛔ {path}")
+            print(f"     Branch: {branch}")
+            print(f"     URL: {url}\n")
+        print("=" * 60)
+        print(f"⚠️  FIX THESE BEFORE PROCEEDING! ({failed}/{checked} failed)")
+        print("=" * 60 + "\n")
+    else:
+        print(f"\n✅ Verification complete: {checked}/{checked} branches valid")
+    
+    return all_valid
+
+
+def branch_exists(repo_url, branch_name):
+    """
+    Check if a specific branch exists in a remote repository.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "ls-remote", "--heads", repo_url, branch_name],
+            capture_output=True, text=True, check=True
+        )
+        return bool(result.stdout.strip())
+    except subprocess.CalledProcessError:
+        return False
 
 if __name__ == "__main__":
     process_submodules(INPUT_FILE, OUTPUT_FILE)
-    print(f"\n🎉 Done! Updated file written to: {OUTPUT_FILE}")
+    verify_submodules(OUTPUT_FILE)

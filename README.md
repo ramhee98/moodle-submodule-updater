@@ -11,6 +11,7 @@
 - **Interactive branch selection** when multiple matching branches are found
 - Skips submodules already on a branch containing the target keyword
 - Asks interactively before updating the submodule definition
+- **Verifies all branches** exist after processing with prominent failure reporting
 - Writes the results to a new updated `.sh` file
 - No changes are made without your confirmation
 
@@ -117,6 +118,14 @@ AUTO_CONFIRM = False
 
 🔍 Checking mod/alreadyupdated (https://github.com/example/moodle-mod_alreadyupdated.git)...
 ℹ️ Already on target branch 'MOODLE_500_STABLE' – no change needed.
+
+🎉 Done! Updated file written to: submodules_updated.sh
+
+🔎 Verifying submodules in 'submodules_updated.sh'...
+  🔍 Verifying theme/boost_union... ✅ 'MOODLE_500_STABLE' exists
+  🔍 Verifying mod/someplugin... ✅ 'MOODLE_500_STABLE' exists
+
+✅ Verification complete: 45/45 branches valid
 ```
 
 ---
