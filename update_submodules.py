@@ -138,7 +138,11 @@ def process_submodules(input_file, output_file):
                         old_version = extract_moodle_version(old_branch)
                         new_version = extract_moodle_version(target_branch)
 
-                        if old_version and new_version and new_version < old_version:
+                        if old_version is None:
+                            print(f"⚠️  Could not extract version from '{old_branch}' – downgrade check skipped.")
+                        elif new_version is None:
+                            print(f"⚠️  Could not extract version from '{target_branch}' – downgrade check skipped.")
+                        elif new_version < old_version:
                             print(f"⚠️  Skipping downgrade: {old_branch} → {target_branch}")
                             outfile.write(line)
                             continue
