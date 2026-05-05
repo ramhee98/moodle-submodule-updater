@@ -149,7 +149,7 @@ def process_submodules(input_file, output_file):
 
                         if old_branch != target_branch:
                             if AUTO_CONFIRM or ask_user(f"👉 Do you want to replace '{old_branch}' with '{target_branch}'?"):
-                                new_line = line.replace(old_branch, target_branch)
+                                new_line = re.sub(r'(?<=-b\s)' + re.escape(old_branch), target_branch, line)
                                 outfile.write(new_line)
                                 print("✅ Updated.")
                             else:
