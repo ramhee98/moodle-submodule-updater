@@ -78,7 +78,9 @@ def extract_moodle_version(branch_name):
     Extract the numeric Moodle version (e.g. 500 from MOODLE_500_STABLE).
     Returns int or None.
     """
-    match = re.search(r'(\d{3})', branch_name)
+    match = re.search(r'MOODLE_(\d+)_', branch_name, re.IGNORECASE)
+    if not match:
+        match = re.search(r'(\d{3,})', branch_name)
     return int(match.group(1)) if match else None
 
 def ask_user(prompt):
