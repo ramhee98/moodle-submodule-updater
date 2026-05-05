@@ -2,6 +2,7 @@ import subprocess
 import re
 import configparser
 import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 def load_config(path="config.ini"):
     if not os.path.exists(path):
@@ -175,31 +176,37 @@ def process_submodules(input_file, output_file):
 def verify_submodules(file_path):
     """
     Verify that all branches in the submodules file exist in their remote repositories.
-    Returns True if all branches are valid, False otherwise.
+    Checks are run in parallel. Returns True if all branches are valid, False otherwise.
     """
     print(f"\n🔎 Verifying submodules in '{file_path}'...")
-    all_valid = True
-    checked = 0
-    failed = 0
-    failed_entries = []
-    
+
+    entries = []
     with open(file_path, 'r', encoding='utf-8') as f:
         for line in f:
             if line.strip().startswith("git submodule add"):
                 match = re.search(r'-b\s+(\S+)\s+(\S+)\s+(\S+)', line)
                 if match:
                     branch, url, path = match.groups()
-                    checked += 1
-                    print(f"  🔍 Verifying {path}...", end=" ", flush=True)
-                    
-                    if branch_exists(url, branch):
-                        print(f"✅ '{branch}' exists")
-                    else:
-                        print(f"❌ '{branch}' NOT FOUND")
-                        all_valid = False
-                        failed += 1
-                        failed_entries.append((path, branch, url))
-    
+                    entries.append((path, branch, url))
+
+    results = {}  # path -> (branch, url, exists)
+
+    def check(entry):
+        path, branch, url = entry
+        return path, branch, url, branch_exists(url, branch)
+
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = {executor.submit(check, e): e for e in entries}
+        for future in as_completed(futures):
+            path, branch, url, exists = future.result()
+            results[path] = (branch, url, exists)
+            status = f"✅ '{branch}' exists" if exists else f"❌ '{branch}' NOT FOUND"
+            print(f"  🔍 {path} ... {status}")
+
+    failed_entries = [(p, b, u) for p, (b, u, ok) in results.items() if not ok]
+    checked = len(entries)
+    failed = len(failed_entries)
+
     if failed > 0:
         print("\n" + "=" * 60)
         print("🚨🚨🚨 VERIFICATION FAILED 🚨🚨🚨")
@@ -214,8 +221,8 @@ def verify_submodules(file_path):
         print("=" * 60 + "\n")
     else:
         print(f"\n✅ Verification complete: {checked}/{checked} branches valid")
-    
-    return all_valid
+
+    return failed == 0
 
 
 def branch_exists(repo_url, branch_name):
