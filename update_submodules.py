@@ -4,8 +4,15 @@ import configparser
 import os
 
 def load_config(path="config.ini"):
+    if not os.path.exists(path):
+        print(f"❌ Config file '{path}' not found.")
+        print("Please create it based on config.ini.example or the README instructions.")
+        raise SystemExit(1)
     config = configparser.ConfigParser()
     config.read(path)
+    if "settings" not in config:
+        print(f"❌ '{path}' is missing the [settings] section.")
+        raise SystemExit(1)
     return config["settings"]
 
 cfg = load_config()
